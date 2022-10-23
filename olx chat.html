@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Room</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        .container{
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        h1,h3{
+            text-align: center;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            text-decoration: underline;
+            margin-bottom: 15px;
+        }
+        p{
+            font-size: 22px;
+            color: blue;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+        #msg_textarea{
+            border: 3px solid lightblue;
+            margin-bottom: 15px;
+            font-size: 25px;
+        }
+        #sent_btn,#get_btn{
+            width: 200px;
+            height: 50px;
+            color: white;
+            background-color: black;
+            text-align: center;
+            font-size: 22px;
+            cursor: pointer;
+        }
+        #msg_tex{
+            color: violet;
+            font-size: 25px;
+        }
+        #msg{
+            width: 250px;
+            height: 50px;
+            color: green;
+            border: 2px solid darkgreen;
+            font-size: 25px;
+            border-radius: 10px;
+            background-color: white;
+            cursor: pointer;
+        }
+        a{
+            text-align: center;
+        }
+
+        #message_div
+        {
+            display: block;
+            width: 100%;
+            height: 100vh;
+            border: 3px solid grey;
+        }
+        #buyer_msg_div
+        {
+            display: block;
+            float: right;
+            border: 2px solid black;
+            color: black;
+            width: 400px;
+            height: 150px;
+            margin: 10px;
+        }
+        #sender_msg_div
+        {
+           display: block;
+           float: left;
+            border: 2px solid blue;
+            width: 400px;
+            height: 150px;
+            color: black;
+            margin: 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <h1> Welcome to olx messenger</h1>
+        <p> Here you guys can talk with each other.</p>
+        <h3>Write your message below:</h3>
+        <textarea  id="msg_textarea" cols="40" rows="5"></textarea>
+        <div id="message_div"></div>
+        <button id="sent_btn" onclick="sendMessage()">Sent</button>
+        <button id="get_btn" onclick="getMessage()">Get Messages</button>
+
+    </div>
+    <p id="chat_id_p"></p>
+    <div id="msg_text-div"></div>
+    <a href="olx.html"><button id="msg"> Home Page Button</button></a>
+
+
+
+    <script type="module">
+        import {auth,sendMessageToDb, getMessagesFromDb} from "./olx firebase.js";
+        let chatroom_id;
+                
+        function getChatRoomId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const chat_id = urlParams.get('id');
+            chatroom_id = chat_id;
+            
+            //getchatroom(id)
+            var chat_p = document.getElementById('chat_id_p');
+            chat_p.innerHTML = chat_id;
+        }
+        getChatRoomId();
+
+
+        window.sendMessage = async function()
+        {
+            var msg_info = document.getElementById('msg_textarea').value;
+            try{
+                await sendMessageToDb(msg_info,chatroom_id);
+                alert("Message is successfully posted into the database.");
+            }
+            catch(e)
+            {
+                console.log("Error occurred on posting a message: " + e.message());
+            }
+        }
+
+        window.getMessage = async function()
+        {
+      const msgElem = document.getElementById('message_div')
+
+            try{
+                let all_messages = await getMessagesFromDb(chatroom_id);
+                for(let element of all_messages)
+                {
+                    if(element.userId == auth.currentUser.uid)
+                    {
+                        msgElem.innerHTML+=`
+                        <div id="buyer_msg_div">
+                            <label> Message Buyer Id </label> <br>
+                            <h3>${element.userId} </h3> <br>
+                            <label> Message Text </label> <br>
+                            <h3>${element.text}</h3> <br> <br>
+                        `
+                    }
+                    else{
+                        msgElem.innerHTML+=`
+                        <div id="sender_msg_div">
+                            <label> Message Sender Id </label> <br>
+                            <h3>${element.userId} </h3> <br>
+                            <label> Message Text </label> <br>
+                            <h3>${element.text}</h3> <br> <br>
+                        `
+                    }
+                }
+            }
+            catch(e)
+            {
+                console.log(" An error occurred in getting the messages --> "+ e.message);
+            }
+        }
+
+// getMessages()
+// function getMessages() {
+//   //1
+//   getRealtimeMessages((messages,chatroom_id) => {
+//       //4
+//       const msgElem = document.getElementById('message_div')
+//       for (let item of messages) {
+//           msgElem.innerHTML +=`<p> ${item.text} </p>`;
+//       }
+//     })
+// }
+        
+        
+    </script>
+    
+</body>
+</html>
